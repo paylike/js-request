@@ -2,83 +2,74 @@
 
 const {pull, collect} = require('pull-stream')
 const test = require('tape')
-const create = require('./')
+const request = require('./')
 
-test('constructor', (t) => {
-	t.equal(typeof create, 'function')
-	t.equal(typeof create.RateLimitError, 'function')
-	t.equal(typeof create.TimeoutError, 'function')
-	t.equal(typeof create.ServerError, 'function')
-	t.equal(typeof create.ResponseError, 'function')
-
-	const request = create({fetch: () => undefined})
-
+test((t) => {
 	t.equal(typeof request, 'function')
 	t.equal(typeof request.RateLimitError, 'function')
 	t.equal(typeof request.TimeoutError, 'function')
 	t.equal(typeof request.ServerError, 'function')
 	t.equal(typeof request.ResponseError, 'function')
-
 	t.end()
 })
 
 test('input validation', (t) => {
-	const request = create({fetch: () => undefined})
+	const r = (e, o) => request(e, {fetch: () => undefined, ...o})
 
-	t.throws(() => request(null, {version: 1}), {
+	t.throws(() => r(null, {version: 1}), {
 		message:
 			'Unexpected first argument (endpoint), got "object" expected "string"',
 	})
-	t.throws(() => request('https://foo', {version: 1}), {
+	t.throws(() => r('https://foo', {version: 1}), {
 		message:
 			'Do not add a protocol to the endpoint ("https://" is added automatically), got "https://foo"',
 	})
-	t.throws(() => request('http://foo', {version: 1}), {
+	t.throws(() => r('http://foo', {version: 1}), {
 		message:
 			'Do not add a protocol to the endpoint ("https://" is added automatically), got "http://foo"',
 	})
-	t.throws(() => request('ftp://foo', {version: 1}), {
+	t.throws(() => r('ftp://foo', {version: 1}), {
 		message:
 			'Do not add a protocol to the endpoint ("https://" is added automatically), got "ftp://foo"',
 	})
-	t.throws(() => request('foo', {version: 1, log: null}), {
+	t.throws(() => r('foo', {version: 1, log: null}), {
 		message: 'Unexpected type of "log", got "object" expected "function"',
 	})
-	t.throws(() => request('foo', {version: 1, fetch: null}), {
+	t.throws(() => r('foo', {version: 1, fetch: null}), {
 		message: 'Unexpected type of "fetch", got "object" expected "function"',
 	})
-	t.throws(() => request('foo'), {
+	t.throws(() => r('foo'), {
 		message:
 			'Unexpected "version", got "undefined" expected a positive integer',
 	})
-	t.throws(() => request('foo', {version: null}), {
+	t.throws(() => r('foo', {version: null}), {
 		message: 'Unexpected "version", got "null" expected a positive integer',
 	})
-	t.throws(() => request('foo', {version: 0}), {
+	t.throws(() => r('foo', {version: 0}), {
 		message: 'Unexpected "version", got "0" expected a positive integer',
 	})
-	t.throws(() => request('foo', {version: 1, query: null}), {
+	t.throws(() => r('foo', {version: 1, query: null}), {
 		message: 'Unexpected value of "query", got "null" expected "object"',
 	})
-	t.throws(() => request('foo', {version: 1, query: '?test'}), {
+	t.throws(() => r('foo', {version: 1, query: '?test'}), {
 		message: 'Unexpected type of "query", got "string" expected "object"',
 	})
-	t.throws(() => request('foo', {version: 1, data: null}), {
+	t.throws(() => r('foo', {version: 1, data: null}), {
 		message: 'Unexpected value of "data", got "null" expected "object"',
 	})
-	t.throws(() => request('foo', {version: 1, data: '?test'}), {
+	t.throws(() => r('foo', {version: 1, data: '?test'}), {
 		message: 'Unexpected type of "data", got "string" expected "object"',
 	})
 	t.end()
 })
 
-test('overwrite "log"', (t) => {
+test('logging', (t) => {
 	t.plan(2)
-	const request = create({fetch: createFetch()})
 	const logs = []
 	pull(
 		request('foo', {
 			log: (l) => logs.push(l),
+			fetch: createFetch(),
 			version: 1,
 		}),
 		collect((err, chunks) => {
@@ -98,9 +89,8 @@ test('overwrite "log"', (t) => {
 	)
 })
 
-test('overwrite "fetch"', (t) => {
+test('custom "fetch"', (t) => {
 	t.plan(2)
-	const request = create({fetch: createFetch()})
 	const logs = []
 	pull(
 		request('foo', {
@@ -127,15 +117,13 @@ test('overwrite "fetch"', (t) => {
 
 test('streaming', (t) => {
 	t.plan(2)
-	const request = create({
-		fetch: createFetch({
-			chunks: [{bar: 'baz'}, {baz: 'bar'}],
-		}),
-	})
 	const logs = []
 	pull(
 		request('foo', {
 			log: (l) => logs.push(l),
+			fetch: createFetch({
+				chunks: [{bar: 'baz'}, {baz: 'bar'}],
+			}),
 			version: 1,
 		}),
 		collect((err, chunks) => {
@@ -157,15 +145,13 @@ test('streaming', (t) => {
 
 test('.first', (t) => {
 	t.plan(2)
-	const request = create({
-		fetch: createFetch({
-			chunks: [{bar: 'baz'}, {baz: 'bar'}],
-		}),
-	})
 	const logs = []
 	pull(
 		request('foo', {
 			log: (l) => logs.push(l),
+			fetch: createFetch({
+				chunks: [{bar: 'baz'}, {baz: 'bar'}],
+			}),
 			version: 1,
 		})
 			.first()
@@ -187,15 +173,13 @@ test('.first', (t) => {
 
 test('.toArray', (t) => {
 	t.plan(2)
-	const request = create({
-		fetch: createFetch({
-			chunks: [{bar: 'baz'}, {baz: 'bar'}],
-		}),
-	})
 	const logs = []
 	pull(
 		request('foo', {
 			log: (l) => logs.push(l),
+			fetch: createFetch({
+				chunks: [{bar: 'baz'}, {baz: 'bar'}],
+			}),
 			version: 1,
 		})
 			.toArray()
@@ -218,16 +202,14 @@ test('.toArray', (t) => {
 
 test('.forEach', (t) => {
 	t.plan(2)
-	const request = create({
-		fetch: createFetch({
-			chunks: [{bar: 'baz'}, {baz: 'bar'}],
-		}),
-	})
 	const logs = []
 	const chunks = []
 	pull(
 		request('foo', {
 			log: (l) => logs.push(l),
+			fetch: createFetch({
+				chunks: [{bar: 'baz'}, {baz: 'bar'}],
+			}),
 			version: 1,
 		})
 			.forEach((chunk) => chunks.push(chunk))
@@ -250,16 +232,14 @@ test('.forEach', (t) => {
 
 test('ResponseError', (t) => {
 	t.plan(5)
-	const request = create({
-		fetch: createFetch({
-			status: 400,
-			chunks: [{code: 'SOME_CODE', message: 'Text message'}],
-		}),
-	})
 	const logs = []
 	pull(
 		request('foo', {
 			log: (l) => logs.push(l),
+			fetch: createFetch({
+				status: 400,
+				chunks: [{code: 'SOME_CODE', message: 'Text message'}],
+			}),
 			version: 1,
 		}),
 		collect((err) => {
@@ -287,17 +267,15 @@ test('ResponseError', (t) => {
 
 test('ServerError', (t) => {
 	t.plan(5)
-	const request = create({
-		fetch: createFetch({
-			status: 500,
-			statusText: 'Server message',
-			headers: new Map([['x-test', 'lorem']]),
-		}),
-	})
 	const logs = []
 	pull(
 		request('foo', {
 			log: (l) => logs.push(l),
+			fetch: createFetch({
+				status: 500,
+				statusText: 'Server message',
+				headers: new Map([['x-test', 'lorem']]),
+			}),
 			version: 1,
 		}),
 		collect((err) => {
@@ -321,17 +299,15 @@ test('ServerError', (t) => {
 
 test('RateLimitError', (t) => {
 	t.plan(4)
-	const request = create({
-		fetch: createFetch({
-			status: 429,
-			statusText: 'Server message',
-			headers: new Map([['retry-after', '300']]),
-		}),
-	})
 	const logs = []
 	pull(
 		request('foo', {
 			log: (l) => logs.push(l),
+			fetch: createFetch({
+				status: 429,
+				statusText: 'Server message',
+				headers: new Map([['retry-after', '300']]),
+			}),
 			version: 1,
 		}),
 		collect((err) => {
@@ -355,12 +331,10 @@ test('RateLimitError', (t) => {
 test('using a query', (t) => {
 	t.plan(1)
 	const logs = []
-	const request = create({
-		fetch: createFetch({log: (l) => logs.push(l)}),
-	})
 	pull(
 		request('foo', {
 			log: (l) => logs.push(l),
+			fetch: createFetch({log: (l) => logs.push(l)}),
 			version: 1,
 			query: {name: 'John', age: {$gt: 30}, alive: true},
 		}),
@@ -399,12 +373,10 @@ test('using a query', (t) => {
 test('sending data', (t) => {
 	t.plan(1)
 	const logs = []
-	const request = create({
-		fetch: createFetch({log: (l) => logs.push(l)}),
-	})
 	pull(
 		request('foo', {
 			log: (l) => logs.push(l),
+			fetch: createFetch({log: (l) => logs.push(l)}),
 			version: 1,
 			data: {name: 'John', age: {$gt: 30}, alive: true},
 		}),
@@ -441,17 +413,14 @@ test('sending data', (t) => {
 	)
 })
 
-test('overwrite "clock"', (t) => {
+test('custom "clock"', (t) => {
 	t.plan(1)
 	const logs = []
-	const clock = createClock((l) => logs.push(l))
-	const request = create({
-		fetch: createFetch({log: (l) => logs.push(l)}),
-	})
 	pull(
 		request('foo', {
 			log: (l) => logs.push(l),
-			clock,
+			fetch: createFetch({log: (l) => logs.push(l)}),
+			clock: createClock((l) => logs.push(l)),
 			version: 1,
 		}),
 		collect(() => {
@@ -491,14 +460,11 @@ test('overwrite "clock"', (t) => {
 test('default timeout is scheduled', (t) => {
 	t.plan(1)
 	const logs = []
-	const clock = createClock((l) => logs.push(l))
-	const request = create({
-		fetch: createFetch({log: (l) => logs.push(l)}),
-		clock,
-	})
 	pull(
 		request('foo', {
 			log: (l) => logs.push(l),
+			fetch: createFetch({log: (l) => logs.push(l)}),
+			clock: createClock((l) => logs.push(l)),
 			version: 1,
 		}),
 		collect(() => {
@@ -535,66 +501,15 @@ test('default timeout is scheduled', (t) => {
 	)
 })
 
-test('timeout can be overwritten on factory level', (t) => {
+test('custom "timeout', (t) => {
 	t.plan(1)
 	const logs = []
-	const clock = createClock((l) => logs.push(l))
-	const request = create({
-		fetch: createFetch({log: (l) => logs.push(l)}),
-		clock,
-		timeout: 5000,
-	})
 	pull(
 		request('foo', {
 			log: (l) => logs.push(l),
-			version: 1,
-		}),
-		collect(() => {
-			t.deepEqual(logs, [
-				{
-					t: 'request',
-					method: 'GET',
-					url: 'https://foo',
-					timeout: 5000,
-				},
-				{
-					t: 'fetching',
-					url: 'https://foo',
-					opts: {
-						method: 'GET',
-						headers: {
-							'X-Client': 'js-1',
-							'Accept-Version': 1,
-						},
-						body: undefined,
-					},
-				},
-				{t: 'setTimeout', ms: 5000, n: 1},
-				{t: 'response', status: 200, statusText: 'OK'},
-				'reader acquired',
-				'reading',
-				'reading',
-				'end of response',
-				'closing stream',
-				{t: 'clearTimeout', n: 1, cleared: true},
-				'reader cancelled',
-			])
-		})
-	)
-})
-
-test('timeout can be overwritten per request', (t) => {
-	t.plan(1)
-	const logs = []
-	const clock = createClock((l) => logs.push(l))
-	const request = create({
-		fetch: createFetch({log: (l) => logs.push(l)}),
-		clock,
-		timeout: 7000,
-	})
-	pull(
-		request('foo', {
-			log: (l) => logs.push(l),
+			fetch: createFetch({log: (l) => logs.push(l)}),
+			clock: createClock((l) => logs.push(l)),
+			timeout: 7000,
 			timeout: 5000,
 			version: 1,
 		}),
@@ -636,13 +551,11 @@ test('timeout ends request', (t) => {
 	t.plan(5)
 	const logs = []
 	const clock = createClock((l) => logs.push(l))
-	const request = create({
-		fetch: () => new Promise(() => undefined),
-		clock,
-	})
 	pull(
 		request('foo', {
 			log: (l) => logs.push(l),
+			fetch: () => new Promise(() => undefined),
+			clock,
 			version: 1,
 		}),
 		collect((err) => {
@@ -671,16 +584,14 @@ test('timeout during reading ends request', (t) => {
 	t.plan(1)
 	const logs = []
 	const clock = createClock((l) => logs.push(l))
-	const request = create({
-		fetch: createFetch({
-			log: (l) => logs.push(l),
-			onRead: () => new Promise(() => undefined),
-		}),
-		clock,
-	})
 	pull(
 		request('foo', {
 			log: (l) => logs.push(l),
+			fetch: createFetch({
+				log: (l) => logs.push(l),
+				onRead: () => new Promise(() => undefined),
+			}),
+			clock,
 			version: 1,
 		}),
 		collect((err) => {
@@ -718,12 +629,10 @@ test('timeout errors reject promises returned by .first', (t) => {
 	t.plan(2)
 	const logs = []
 	const clock = createClock((l) => logs.push(l))
-	const request = create({
-		fetch: () => new Promise(() => undefined),
-		clock,
-	})
 	request('foo', {
 		log: (l) => logs.push(l),
+		fetch: () => new Promise(() => undefined),
+		clock,
 		version: 1,
 	})
 		.first()
@@ -738,12 +647,10 @@ test('timeout errors reject promises returned by .toArray', (t) => {
 	t.plan(2)
 	const logs = []
 	const clock = createClock((l) => logs.push(l))
-	const request = create({
-		fetch: () => new Promise(() => undefined),
-		clock,
-	})
 	request('foo', {
 		log: (l) => logs.push(l),
+		fetch: () => new Promise(() => undefined),
+		clock,
 		version: 1,
 	})
 		.toArray()
@@ -758,12 +665,10 @@ test('timeout errors reject promises returned by .forEach', (t) => {
 	t.plan(2)
 	const logs = []
 	const clock = createClock((l) => logs.push(l))
-	const request = create({
-		fetch: () => new Promise(() => undefined),
-		clock,
-	})
 	request('foo', {
 		log: (l) => logs.push(l),
+		fetch: () => new Promise(() => undefined),
+		clock,
 		version: 1,
 	})
 		.forEach(() => {})

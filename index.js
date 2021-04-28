@@ -6,7 +6,7 @@ const drain = require('psp-drain')
 const collect = require('psp-collect')
 const stringify = require('http-querystring-stringify')
 
-const clientId = `js-1`
+const defaultClientId = `js-1`
 
 class RateLimitError extends Error {
 	constructor(retryAfter) {
@@ -56,38 +56,24 @@ const errors = {
 	ResponseError,
 }
 
-module.exports = Object.assign(create, errors)
-
-function create(defaults = {}) {
-	const log = defaults.log || (() => undefined)
-	const fetch = defaults.fetch || global.fetch
-	const protocol = defaults.protocol || 'https'
-	const timeout = Number.isInteger(defaults.timeout)
-		? defaults.timeout
-		: 10000
-	const clock = {
-		setTimeout: (...args) => setTimeout(...args),
-		clearTimeout: (...args) => clearTimeout(...args),
-		...defaults.clock,
-	}
-	return Object.assign(
-		(endpoint, opts) =>
-			request(endpoint, {
-				log,
-				clock,
-				fetch,
-				protocol,
-				clientId,
-				timeout,
-				...opts,
-			}),
-		errors
-	)
-}
+module.exports = Object.assign(request, errors)
 
 function request(
 	endpoint,
-	{log, clock, fetch, protocol, clientId, timeout, version, query, data}
+	{
+		log = () => undefined,
+		clock = {
+			setTimeout: (...args) => setTimeout(...args),
+			clearTimeout: (...args) => clearTimeout(...args),
+		},
+		protocol = 'https',
+		clientId = defaultClientId,
+		timeout = 10000,
+		fetch = window.fetch,
+		version,
+		query,
+		data,
+	}
 ) {
 	if (typeof endpoint !== 'string') {
 		throw new Error(

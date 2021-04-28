@@ -22,66 +22,49 @@ further context.
 
 ```js
 const fetch = require('node-fetch') // necessary only for Node.js support
-const request = require('@paylike/request')({fetch})
+const request = require('@paylike/request')
 
 const token = request('vault.paylike.io', {
+  fetch,
   version: 1,
   data: {type: 'pcn', value: '1000 0000 0000 0000'.replaceAll(' ', '')},
 }).first()
 ```
 
-## Initializing
-
-The package exports a single function for setting up the `request` function with
-a range of default options (all optional):
-
-```js
-const create = require('@paylike/request')
-
-create({
-  log: () => {},
-  fetch: window.fetch,
-  timeout: 10000, // 0 = disabled
-
-  // mostly relevant during testing
-  protocol: 'https',
-  clock: {
-    setTimeout,
-    clearTimeout,
-  },
-}) // → request()
-```
-
 ## `request`
+
+This package's default export is a function:
 
 ```js
 request(
   endpoint, // String, required
   {
+    log: () => {},
+    fetch: window.fetch, // required in e.g. Node.js
+    timeout: 10000, // 0 = disabled
+
     version: String, // required
     query: Object,
     data: Object,
 
-    // optional, inherits from defaults
-    log: Function,
-    fetch: Function,
-    timeout: Number, // 0 = disabled
-
     // mostly relevant during testing
-    clock: {setTimeout, clearTimeout},
     protocol: 'https',
+    clock: {
+      setTimeout,
+      clearTimeout,
+    },
   }
 })
 ```
 
-`request` returns a function that can be consumed as a
-[pull-stream](https://pull-stream.github.io) source:
+`request` returns a [pull-stream](https://pull-stream.github.io) source (a
+function):
 
 ```js
 pull(request(/* ... */), collect(console.log))
 ```
 
-For most cases, the following shortcut functions can be used:
+For most cases, the below shortcut functions can be used:
 
 ```js
 request(/* ... */).first().then(console.log, console.error)
@@ -101,8 +84,8 @@ request(/* ... */).forEach(console.log).catch(console.error)
 thrown by the `fetch` implementation by rejecting the promise returned by a
 shortcut function or by the error mechanism of a pull-stream.
 
-All error classes can be accessed as both `create.<error class>` and
-`request.<error class>`, for instance `request.RateLimitError`.
+All error classes can be accessed as `request.<error class>`, for instance
+`request.RateLimitError`.
 
 ### Example
 
