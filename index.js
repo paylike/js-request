@@ -217,6 +217,7 @@ function request(
 			)
 		} else if (head !== undefined) {
 			const {status, statusText, headers} = head
+			const contentType = headers.get('content-type')
 			log({t: 'response', status, statusText})
 			if (status === 204) {
 				// "No Content"
@@ -234,7 +235,7 @@ function request(
 				reader = getReader(head.body)
 				decoder = new TextDecoder()
 				source(null, cb)
-			} else if (headers.get('content-type')?.includes('json')) {
+			} else if (contentType && contentType.includes('json')) {
 				cbp = cb
 				head.json().then(
 					(err) => cbc(new ResponseError(err)),
