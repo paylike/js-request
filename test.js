@@ -20,18 +20,6 @@ test('input validation', (t) => {
 		message:
 			'Unexpected first argument (endpoint), got "object" expected "string"',
 	})
-	t.throws(() => r('https://foo', {version: 1}), {
-		message:
-			'Do not add a protocol to the endpoint ("https://" is added automatically), got "https://foo"',
-	})
-	t.throws(() => r('http://foo', {version: 1}), {
-		message:
-			'Do not add a protocol to the endpoint ("https://" is added automatically), got "http://foo"',
-	})
-	t.throws(() => r('ftp://foo', {version: 1}), {
-		message:
-			'Do not add a protocol to the endpoint ("https://" is added automatically), got "ftp://foo"',
-	})
 	t.throws(() => r('foo', {version: 1, log: null}), {
 		message: 'Unexpected type of "log", got "object" expected "function"',
 	})
@@ -82,6 +70,37 @@ test('logging', (t) => {
 					timeout: 10000,
 				},
 				{t: 'response', status: 200, statusText: 'OK'},
+				'end of response',
+				'closing stream',
+			])
+		})
+	)
+})
+
+test('"endpoint" can have a protocol', (t) => {
+	t.plan(2)
+	const logs = []
+	pull(
+		request('http://foo', {
+			log: (l) => logs.push(l),
+			fetch: createFetch(),
+			version: 1,
+		}),
+		collect((err, chunks) => {
+			t.deepEqual(chunks, [{foo: 'bar'}])
+			t.deepEqual(logs, [
+				{
+					t: 'request',
+					method: 'GET',
+					url: 'http://foo',
+					timeout: 10000,
+				},
+				{
+					t: 'response',
+					status: 200,
+					statusText: 'OK',
+					requestId: '<some id>',
+				},
 				'end of response',
 				'closing stream',
 			])

@@ -48,7 +48,6 @@ request(
     data: Object,
 
     // mostly relevant during testing
-    protocol: 'https',
     clock: {
       setTimeout,
       clearTimeout,

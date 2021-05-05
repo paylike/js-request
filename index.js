@@ -66,7 +66,6 @@ function request(
 			setTimeout: (...args) => setTimeout(...args),
 			clearTimeout: (...args) => clearTimeout(...args),
 		},
-		protocol = 'https',
 		clientId = defaultClientId,
 		timeout = 10000,
 		fetch = window.fetch,
@@ -78,11 +77,6 @@ function request(
 	if (typeof endpoint !== 'string') {
 		throw new Error(
 			`Unexpected first argument (endpoint), got "${typeof endpoint}" expected "string"`
-		)
-	}
-	if (/^[a-zA-Z]+:\/\//.test(endpoint)) {
-		throw new Error(
-			`Do not add a protocol to the endpoint ("${protocol}://" is added automatically), got "${endpoint}"`
 		)
 	}
 	if (typeof log !== 'function') {
@@ -121,9 +115,9 @@ function request(
 		)
 	}
 	const method = data === undefined ? 'GET' : 'POST'
-	const url = `${protocol}://${endpoint}${
-		query !== undefined ? '?' + stringify(query) : ''
-	}`
+	const url = `${
+		endpoint.includes('://') ? endpoint : 'https://' + endpoint
+	}${query !== undefined ? '?' + stringify(query) : ''}`
 
 	log({t: 'request', method, url, timeout})
 	const response = fetch(url, {
