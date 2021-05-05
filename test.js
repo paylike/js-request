@@ -69,7 +69,12 @@ test('logging', (t) => {
 					url: 'https://foo',
 					timeout: 10000,
 				},
-				{t: 'response', status: 200, statusText: 'OK'},
+				{
+					t: 'response',
+					status: 200,
+					statusText: 'OK',
+					requestId: '<some id>',
+				},
 				'end of response',
 				'closing stream',
 			])
@@ -126,7 +131,12 @@ test('custom "fetch"', (t) => {
 					url: 'https://foo',
 					timeout: 10000,
 				},
-				{t: 'response', status: 201, statusText: 'OK'},
+				{
+					t: 'response',
+					status: 201,
+					statusText: 'OK',
+					requestId: '<some id>',
+				},
 				'end of response',
 				'closing stream',
 			])
@@ -154,7 +164,12 @@ test('streaming', (t) => {
 					url: 'https://foo',
 					timeout: 10000,
 				},
-				{t: 'response', status: 200, statusText: 'OK'},
+				{
+					t: 'response',
+					status: 200,
+					statusText: 'OK',
+					requestId: '<some id>',
+				},
 				'end of response',
 				'closing stream',
 			])
@@ -183,7 +198,12 @@ test('.first', (t) => {
 						url: 'https://foo',
 						timeout: 10000,
 					},
-					{t: 'response', status: 200, statusText: 'OK'},
+					{
+						t: 'response',
+						status: 200,
+						statusText: 'OK',
+						requestId: '<some id>',
+					},
 					'closing stream',
 				])
 			})
@@ -211,7 +231,12 @@ test('.toArray', (t) => {
 						url: 'https://foo',
 						timeout: 10000,
 					},
-					{t: 'response', status: 200, statusText: 'OK'},
+					{
+						t: 'response',
+						status: 200,
+						statusText: 'OK',
+						requestId: '<some id>',
+					},
 					'end of response',
 					'closing stream',
 				])
@@ -241,7 +266,12 @@ test('.forEach', (t) => {
 						url: 'https://foo',
 						timeout: 10000,
 					},
-					{t: 'response', status: 200, statusText: 'OK'},
+					{
+						t: 'response',
+						status: 200,
+						statusText: 'OK',
+						requestId: '<some id>',
+					},
 					'end of response',
 					'closing stream',
 				])
@@ -250,7 +280,7 @@ test('.forEach', (t) => {
 })
 
 test('ResponseError', (t) => {
-	t.plan(5)
+	t.plan(6)
 	const logs = []
 	pull(
 		request('foo', {
@@ -265,11 +295,12 @@ test('ResponseError', (t) => {
 			t.ok(err instanceof request.ResponseError)
 			t.equal(
 				String(err),
-				'Text message (SOME_CODE)',
+				'Text message (SOME_CODE, <some id>)',
 				'string representation'
 			)
 			t.equal(err.code, 'SOME_CODE', 'code')
 			t.equal(err.message, 'Text message', 'message')
+			t.equal(err.requestId, '<some id>', 'request ID')
 			t.deepEqual(logs, [
 				{
 					t: 'request',
@@ -277,7 +308,12 @@ test('ResponseError', (t) => {
 					url: 'https://foo',
 					timeout: 10000,
 				},
-				{t: 'response', status: 400, statusText: 'OK'},
+				{
+					t: 'response',
+					status: 400,
+					statusText: 'OK',
+					requestId: '<some id>',
+				},
 				{t: 'aborted', abort: err},
 			])
 		})
@@ -293,15 +329,24 @@ test('ServerError', (t) => {
 			fetch: createFetch({
 				status: 500,
 				statusText: 'Server message',
-				headers: new Map([['x-test', 'lorem']]),
+				headers: new Map([
+					['x-test', 'lorem'],
+					['x-request-id', '<some id>'],
+				]),
 			}),
 			version: 1,
 		}),
 		collect((err) => {
 			t.ok(err instanceof request.ServerError)
-			t.equal(err.message, '500 Server message')
+			t.equal(err.message, '500 Server message (<some id>)')
 			t.equal(err.status, 500)
-			t.deepEqual([...err.headers], [['x-test', 'lorem']])
+			t.deepEqual(
+				[...err.headers],
+				[
+					['x-test', 'lorem'],
+					['x-request-id', '<some id>'],
+				]
+			)
 			t.deepEqual(logs, [
 				{
 					t: 'request',
@@ -309,7 +354,12 @@ test('ServerError', (t) => {
 					url: 'https://foo',
 					timeout: 10000,
 				},
-				{t: 'response', status: 500, statusText: 'Server message'},
+				{
+					t: 'response',
+					status: 500,
+					statusText: 'Server message',
+					requestId: '<some id>',
+				},
 				{t: 'aborted', abort: err},
 			])
 		})
@@ -325,7 +375,10 @@ test('RateLimitError', (t) => {
 			fetch: createFetch({
 				status: 429,
 				statusText: 'Server message',
-				headers: new Map([['retry-after', '300']]),
+				headers: new Map([
+					['retry-after', '300'],
+					['x-request-id', '<some id>'],
+				]),
 			}),
 			version: 1,
 		}),
@@ -340,7 +393,12 @@ test('RateLimitError', (t) => {
 					url: 'https://foo',
 					timeout: 10000,
 				},
-				{t: 'response', status: 429, statusText: 'Server message'},
+				{
+					t: 'response',
+					status: 429,
+					statusText: 'Server message',
+					requestId: '<some id>',
+				},
 				{t: 'aborted', abort: err},
 			])
 		})
@@ -377,7 +435,12 @@ test('using a query', (t) => {
 						body: undefined,
 					},
 				},
-				{t: 'response', status: 200, statusText: 'OK'},
+				{
+					t: 'response',
+					status: 200,
+					statusText: 'OK',
+					requestId: '<some id>',
+				},
 				'reader acquired',
 				'reading',
 				'reading',
@@ -420,7 +483,12 @@ test('sending data', (t) => {
 						body: '{"name":"John","age":{"$gt":30},"alive":true}',
 					},
 				},
-				{t: 'response', status: 200, statusText: 'OK'},
+				{
+					t: 'response',
+					status: 200,
+					statusText: 'OK',
+					requestId: '<some id>',
+				},
 				'reader acquired',
 				'reading',
 				'reading',
@@ -463,7 +531,12 @@ test('custom "clock"', (t) => {
 					},
 				},
 				{t: 'setTimeout', ms: 10000, n: 1},
-				{t: 'response', status: 200, statusText: 'OK'},
+				{
+					t: 'response',
+					status: 200,
+					statusText: 'OK',
+					requestId: '<some id>',
+				},
 				'reader acquired',
 				'reading',
 				'reading',
@@ -507,7 +580,12 @@ test('default timeout is scheduled', (t) => {
 					},
 				},
 				{t: 'setTimeout', ms: 10000, n: 1},
-				{t: 'response', status: 200, statusText: 'OK'},
+				{
+					t: 'response',
+					status: 200,
+					statusText: 'OK',
+					requestId: '<some id>',
+				},
 				'reader acquired',
 				'reading',
 				'reading',
@@ -553,7 +631,12 @@ test('custom "timeout', (t) => {
 					},
 				},
 				{t: 'setTimeout', ms: 5000, n: 1},
-				{t: 'response', status: 200, statusText: 'OK'},
+				{
+					t: 'response',
+					status: 200,
+					statusText: 'OK',
+					requestId: '<some id>',
+				},
 				'reader acquired',
 				'reading',
 				'reading',
@@ -631,7 +714,12 @@ test('timeout during reading ends request', (t) => {
 					},
 				},
 				{t: 'setTimeout', ms: 10000, n: 1},
-				{t: 'response', status: 200, statusText: 'OK'},
+				{
+					t: 'response',
+					status: 200,
+					statusText: 'OK',
+					requestId: '<some id>',
+				},
 				'reader acquired',
 				'reading',
 				{t: 'running timer', n: 1},
@@ -754,7 +842,11 @@ function createFetch(opts = {}) {
 		onCancel = () => {},
 	} = opts
 	const headers =
-		opts.headers || new Map([['content-type', 'application/json']])
+		opts.headers ||
+		new Map([
+			['content-type', 'application/json'],
+			['x-request-id', '<some id>'],
+		])
 	return (url, opts) => {
 		log({t: 'fetching', url, opts})
 		return Promise.resolve(

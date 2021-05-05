@@ -38,14 +38,15 @@ class ServerError extends Error {
 }
 
 class ResponseError extends Error {
-	constructor({message, ...json}) {
+	constructor({message, ...json}, requestId) {
 		super(message)
 		this.name = this.constructor.name
+		this.requestId = requestId
 		Object.assign(this, json)
 	}
 
 	toString() {
-		return `${this.message} (${this.code})`
+		return `${this.message} (${this.code}, ${this.requestId})`
 	}
 }
 
@@ -212,7 +213,12 @@ function request(
 		} else if (head !== undefined) {
 			const {status, statusText, headers} = head
 			const contentType = headers.get('content-type')
-			log({t: 'response', status, statusText})
+			log({
+				t: 'response',
+				status,
+				statusText,
+				requestId: headers.get('x-request-id'),
+			})
 			if (status === 204) {
 				// "No Content"
 				source(true, cb)
@@ -232,7 +238,10 @@ function request(
 			} else if (contentType && contentType.includes('json')) {
 				cbp = cb
 				head.json().then(
-					(err) => cbc(new ResponseError(err)),
+					(err) =>
+						cbc(
+							new ResponseError(err, headers.get('x-request-id'))
+						),
 					(err) =>
 						cbc(
 							new ServerError(
@@ -242,7 +251,13 @@ function request(
 				)
 			} else {
 				source(
-					new ServerError(`${status} ${statusText}`, status, headers),
+					new ServerError(
+						`${status} ${statusText} (${headers.get(
+							'x-request-id'
+						)})`,
+						status,
+						headers
+					),
 					cb
 				)
 			}
