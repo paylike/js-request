@@ -1,5 +1,7 @@
 # Paylike low-level request helper
 
+For a higher-level client see https://www.npmjs.com/package/@paylike/client.
+
 This is a low-level library used for making HTTP(s) requests to Paylike APIs. It
 incorporates the conventions described in the
 [Paylike API reference](https://github.com/paylike/api-reference).
