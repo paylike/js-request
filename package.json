@@ -1,6 +1,6 @@
 {
 	"name": "@paylike/request",
-	"version": "3.0.0",
+	"version": "3.0.1",
 	"repository": "paylike/js-request",
 	"scripts": {
 		"test": "node test"
