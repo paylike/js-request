@@ -29,7 +29,8 @@
 		"json-parse-safe": "^2.0.0",
 		"psp-collect": "^1.0.1",
 		"psp-drain": "^1.0.1",
-		"pull-stream": "^3.6.14"
+		"pull-stream": "^3.6.14",
+		"serialize-error": "^8.1.0"
 	},
 	"devDependencies": {
 		"tape": "^5.2.2"

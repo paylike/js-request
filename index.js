@@ -5,6 +5,7 @@ const {pull} = require('pull-stream')
 const drain = require('psp-drain')
 const collect = require('psp-collect')
 const stringify = require('http-querystring-stringify')
+const {serializeError} = require('serialize-error')
 
 const defaultClientId = `js-1`
 
@@ -170,7 +171,7 @@ function request(
 			if (abort === true) {
 				log('closing stream')
 			} else {
-				log({t: 'aborted', abort})
+				log({t: 'aborted', abort: serializeError(abort)})
 			}
 			ended = abort
 			clock.clearTimeout(timer)

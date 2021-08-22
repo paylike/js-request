@@ -100,7 +100,10 @@ test('logging (failure)', (t) => {
 					url: 'https://foo',
 					timeout: 10000,
 				},
-				{t: 'aborted', abort: err},
+				{
+					t: 'aborted',
+					abort: {name: 'Error', message: 'test', stack: err.stack},
+				},
 			])
 		)
 	)
@@ -338,7 +341,16 @@ test('ResponseError', (t) => {
 					statusText: 'OK',
 					requestId: '<some id>',
 				},
-				{t: 'aborted', abort: err},
+				{
+					t: 'aborted',
+					abort: {
+						name: 'ResponseError',
+						message: 'Text message',
+						code: 'SOME_CODE',
+						requestId: '<some id>',
+						stack: err.stack,
+					},
+				},
 			])
 		})
 	)
@@ -384,7 +396,16 @@ test('ServerError', (t) => {
 					statusText: 'Server message',
 					requestId: '<some id>',
 				},
-				{t: 'aborted', abort: err},
+				{
+					t: 'aborted',
+					abort: {
+						name: 'ServerError',
+						message: '500 Server message (<some id>)',
+						status: 500,
+						headers: {},
+						stack: err.stack,
+					},
+				},
 			])
 		})
 	)
@@ -423,7 +444,15 @@ test('RateLimitError', (t) => {
 					statusText: 'Server message',
 					requestId: '<some id>',
 				},
-				{t: 'aborted', abort: err},
+				{
+					t: 'aborted',
+					abort: {
+						name: 'RateLimitError',
+						message: 'Request got rate limited for 300 seconds.',
+						retryAfter: 300000,
+						stack: err.stack,
+					},
+				},
 			])
 		})
 	)
@@ -698,7 +727,15 @@ test('timeout ends request', (t) => {
 				},
 				{t: 'setTimeout', ms: 10000, n: 1},
 				{t: 'running timer', n: 1},
-				{t: 'aborted', abort: err},
+				{
+					t: 'aborted',
+					abort: {
+						name: 'TimeoutError',
+						message: 'Request timed out after 10 seconds.',
+						timeout: 10000,
+						stack: err.stack,
+					},
+				},
 				{t: 'clearTimeout', n: 1, cleared: false},
 			])
 		})
@@ -747,7 +784,15 @@ test('timeout during reading ends request', (t) => {
 				'reader acquired',
 				'reading',
 				{t: 'running timer', n: 1},
-				{t: 'aborted', abort: err},
+				{
+					t: 'aborted',
+					abort: {
+						name: 'TimeoutError',
+						message: 'Request timed out after 10 seconds.',
+						timeout: 10000,
+						stack: err.stack,
+					},
+				},
 				{t: 'clearTimeout', n: 1, cleared: false},
 				'reader cancelled',
 			])
