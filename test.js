@@ -51,7 +51,7 @@ test('input validation', (t) => {
 	t.end()
 })
 
-test('logging', (t) => {
+test('logging (success)', (t) => {
 	t.plan(2)
 	const logs = []
 	pull(
@@ -79,6 +79,30 @@ test('logging', (t) => {
 				'closing stream',
 			])
 		})
+	)
+})
+
+test('logging (failure)', (t) => {
+	t.plan(1)
+	const logs = []
+	const err = new Error('test')
+	pull(
+		request('foo', {
+			log: (l) => logs.push(l),
+			fetch: () => Promise.reject(err),
+			version: 1,
+		}),
+		collect((err) =>
+			t.deepEqual(logs, [
+				{
+					t: 'request',
+					method: 'GET',
+					url: 'https://foo',
+					timeout: 10000,
+				},
+				{t: 'aborted', abort: err},
+			])
+		)
 	)
 })
 
