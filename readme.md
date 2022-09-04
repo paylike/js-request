@@ -18,7 +18,7 @@ further context.
 
 ```js
 // swap esm.sh for any "npm CJS to ESM CDN"
-import request from 'https://esm.sh/@paylike/request@3.0.2'
+import request from 'https://esm.sh/@paylike/request@3.1.0'
 
 const token = request('vault.paylike.io', {
   version: 1,
