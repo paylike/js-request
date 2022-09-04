@@ -70,7 +70,7 @@ function request(
 		},
 		clientId = defaultClientId,
 		timeout = 10000,
-		fetch = window.fetch,
+		fetch = globalThis.fetch,
 		version,
 		query,
 		data,

@@ -23,11 +23,9 @@ further context.
 ## Example
 
 ```js
-const fetch = require('node-fetch') // necessary only for Node.js support
 const request = require('@paylike/request')
 
 const token = request('vault.paylike.io', {
-  fetch,
   version: 1,
   data: {type: 'pcn', value: '1000 0000 0000 0000'.replaceAll(' ', '')},
 }).first()
@@ -42,7 +40,7 @@ request(
   endpoint, // String, required
   {
     log: () => {},
-    fetch: window.fetch, // required in e.g. Node.js
+    fetch: globalThis.fetch, // required in older Node.js
     timeout: 10000, // 0 = disabled
 
     version: String, // required
