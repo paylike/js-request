@@ -2,6 +2,7 @@
 	"name": "@paylike/request",
 	"version": "3.0.2",
 	"repository": "paylike/js-request",
+	"main": "index.js",
 	"scripts": {
 		"test": "node test"
 	},
