@@ -6,12 +6,6 @@ This is a low-level library used for making HTTP(s) requests to Paylike APIs. It
 incorporates the conventions described in the
 [Paylike API reference](https://github.com/paylike/api-reference).
 
-It is built to work in any JavaScript environment (Node.js, browser) by
-accepting a [Fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)
-implementation as input. Minor tweaks are implemented to support the
-[`node-fetch`](https://github.com/node-fetch/node-fetch) implementation even
-though it is not entirely compatible.
-
 This function is usually put behind a retry mechanism. Paylike APIs _will_
 expect any client to gracefully handle a rate limiting response and expects them
 to retry.
@@ -131,3 +125,11 @@ function retry(fn, should, attempts = 0) {
   from the API reference. They have at least a `code` and `message` property,
   but may also have other useful properties relevant to the specific error code,
   such as a minimum and maximum for amounts.
+
+### Custom `fetch` (e.g. Node.js v16 and older)
+
+It is built to work in any JavaScript environment (Node.js, browser) by
+accepting a [Fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)
+implementation as input. Minor tweaks are implemented to support the
+[`node-fetch`](https://github.com/node-fetch/node-fetch) implementation even
+though it is not entirely compatible.
